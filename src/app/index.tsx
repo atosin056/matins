@@ -2,10 +2,34 @@ import avatar from "@/assets/images/avatar.png";
 import Flame from "@/assets/images/Flame.svg";
 import todayjourney from "@/assets/images/todayjourney.png";
 import DayPicker from "@/components/DayPicker";
+import FloatingNav, { NavItem } from "@/components/FloatingNav";
+import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+  const items: NavItem[] = [
+    {
+      key: "home",
+      route: "/",
+      icon: ({ color }) => (
+        <Ionicons name="book-outline" size={26} color={color} />
+      ),
+    },
+    {
+      key: "add",
+      route: "/add",
+      primary: true,
+      icon: () => <Ionicons name="mic" size={32} color="#2A2A1E" />,
+    },
+    {
+      key: "streak",
+      route: "/streak",
+      icon: ({ color }) => (
+        <Ionicons name="settings-outline" size={26} color={color} />
+      ),
+    },
+  ];
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -49,6 +73,7 @@ export default function HomeScreen() {
           </Text>
         </View>
       </View>
+      <FloatingNav items={items} />
     </SafeAreaView>
   );
 }
