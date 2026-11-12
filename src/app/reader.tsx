@@ -211,7 +211,7 @@ function ReaderScreen({
       if (prayerRequestId.current === requestId) {
         console.error("Failed to generate prayer:", reason);
         setPrayerError(
-          "Could not generate a prayer. Check your connection and prayer API endpoint, then try again.",
+          "Could not generate a prayer. Check your connection and Gemini API key, then try again.",
         );
       }
     } finally {

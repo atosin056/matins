@@ -135,11 +135,11 @@ npx expo start
 **Environment**
 
 ```bash
-# .env.local
-EXPO_PUBLIC_PRAYER_API_URL=https://your-api.example.com/api/prayer
+# .env
+EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
 ```
 
-The app sends a `POST` request to this endpoint with `{ "reference": "Genesis 1", "translation": "KJV", "chapter": [{ "verse": 1, "text": "..." }] }`. Return `{ "prayer": "..." }`. Keep Gemini credentials on your backend; the mobile app only needs the public endpoint URL.
+The app sends the open KJV chapter directly to Gemini's `gemini-3.5-flash-lite` model. The Expo `EXPO_PUBLIC_` prefix makes this key available to the app, which means it is bundled with the client. Keep this setup to private builds; do not distribute the app with this key.
 
 **Testing on a real device:** mirror your phone to your PC with [scrcpy](https://github.com/Genymobile/scrcpy). Judge performance on a **release build**, not a dev build.
 
