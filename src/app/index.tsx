@@ -1,6 +1,7 @@
 import avatar from "@/assets/images/avatar.png";
 import Flame from "@/assets/images/Flame.svg";
 import todayjourney from "@/assets/images/todayjourney.png";
+import { useBibleVoiceSearch } from "@/components/BibleVoiceSearchProvider";
 import DayPicker from "@/components/DayPicker";
 import FloatingNav, { NavItem } from "@/components/FloatingNav";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +9,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+  const { openVoiceSearch } = useBibleVoiceSearch();
   const items: NavItem[] = [
     {
       key: "home",
@@ -25,9 +27,9 @@ export default function HomeScreen() {
     },
     {
       key: "add",
-      route: "/add",
       primary: true,
       icon: () => <Ionicons name="mic" size={32} color="#2A2A1E" />,
+      onPress: openVoiceSearch,
     },
     {
       key: "streak",

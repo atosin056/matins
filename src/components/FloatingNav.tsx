@@ -6,9 +6,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export type NavItem = {
   key: string;
-  route: Href;
+  route?: Href;
   icon: (p: { color: string; size: number; active: boolean }) => ReactNode;
   primary?: boolean; // the big highlighted button
+  onPress?: () => void;
 };
 
 // Edit this list to change the buttons and the screens they open
@@ -89,13 +90,22 @@ export default function FloatingNav({
     >
       <View style={styles.bar}>
         {items.map((item) => {
-          const active = isActive(pathname, item.route);
+          const active = item.route
+            ? isActive(pathname, item.route)
+            : false;
+          const handlePress = () => {
+            if (item.onPress) {
+              item.onPress();
+              return;
+            }
+            if (item.route) router.navigate(item.route);
+          };
 
           if (item.primary) {
             return (
               <Pressable
                 key={item.key}
-                onPress={() => router.navigate(item.route)}
+                onPress={handlePress}
                 style={styles.primary}
                 hitSlop={8}
               >
@@ -107,7 +117,7 @@ export default function FloatingNav({
           return (
             <Pressable
               key={item.key}
-              onPress={() => router.navigate(item.route)}
+              onPress={handlePress}
               style={styles.item}
               hitSlop={8}
             >

@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { SQLiteProvider } from "expo-sqlite";
 import { useEffect } from "react";
 
+import { BibleVoiceSearchProvider } from "@/components/BibleVoiceSearchProvider";
 import { migrateDbIfNeeded } from "@/db/migrate";
 
 SplashScreen.preventAutoHideAsync();
@@ -32,7 +33,9 @@ export default function RootLayout() {
 
   return (
     <SQLiteProvider databaseName="matins.db" onInit={migrateDbIfNeeded}>
-      <AppNavigator />
+      <BibleVoiceSearchProvider>
+        <AppNavigator />
+      </BibleVoiceSearchProvider>
     </SQLiteProvider>
   );
 }
