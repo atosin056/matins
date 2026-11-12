@@ -1,7 +1,30 @@
+import { BOOKS } from "@/constants/books";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function books() {
+  const ROW_HEIGHT = 50;
+  type BookRowProps = {
+    name: string;
+    onPress: () => void;
+  };
+
+  function BookRow({ name, onPress }: BookRowProps) {
+    return (
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+      >
+        <Text
+          style={{ color: "white", fontFamily: "Poppins-Medium", fontSize: 17 }}
+        >
+          {" "}
+          {name}{" "}
+        </Text>
+        <Ionicons name="chevron-forward" size={20} color="#8A8F98" />
+      </Pressable>
+    );
+  }
   return (
     <SafeAreaView style={styles.container}>
       <View
@@ -33,6 +56,26 @@ export default function books() {
           </View>
         </View>
       </View>
+      <View>
+        <FlatList
+          style={{ marginTop: 20 }}
+          data={BOOKS}
+          keyExtractor={(b) => String(b.id)}
+          getItemLayout={(_, i) => ({
+            length: ROW_HEIGHT,
+            offset: ROW_HEIGHT * i,
+            index: i,
+          })}
+          renderItem={({ item }) => (
+            <BookRow
+              name={item.name}
+              onPress={() =>
+                navigation.navigate("Chapters", { bookId: item.id })
+              }
+            />
+          )}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -44,4 +87,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#171A16",
     flex: 1,
   },
+  row: {
+    height: 50,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  rowPressed: { backgroundColor: "#242524" },
+  name: { color: "#fff", fontSize: 18, fontWeight: "500" },
 });
