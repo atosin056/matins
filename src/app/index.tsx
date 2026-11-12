@@ -13,6 +13,13 @@ export default function HomeScreen() {
       key: "home",
       route: "/",
       icon: ({ color }) => (
+        <Ionicons name="home-outline" size={26} color={color} />
+      ),
+    },
+    {
+      key: "books",
+      route: "/books",
+      icon: ({ color }) => (
         <Ionicons name="book-outline" size={26} color={color} />
       ),
     },

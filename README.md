@@ -7,57 +7,56 @@
 A morning-first Bible app built with **React Native**, **TypeScript** and **SQLite**.
 Say the passage. Get the summary. Turn it into a prayer.
 
-![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
-![Gemini](https://img.shields.io/badge/Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)
-![Status](https://img.shields.io/badge/status-in_development-2F5D50?style=for-the-badge)
-
 </div>
 
 ---
 
 ## 📖 Why Matins?
 
-*Matins* is the old word for **morning prayer**, and that is exactly the moment this app is built for.
+_Matins_ is the old word for **morning prayer**, and that is exactly the moment this app is built for.
 
-Picture it. It is early, you are still half asleep, and someone calls out *"John 3:16"*. Now you are scrolling through 66 books, hunting for the right chapter while everyone else is already reading. After the reading, someone has to explain every verse out loud, and a quiet moment turns into a long one.
+Picture it. It is early, you are still half asleep, and someone calls out _"John 3:16"_. Now you are scrolling through 66 books, hunting for the right chapter while everyone else is already reading. After the reading, someone has to explain every verse out loud, and a quiet moment turns into a long one.
 
 **Matins fixes that morning routine:**
 
-| The problem | The Matins answer |
-|---|---|
-| Hunting for a passage while half asleep | 🎙️ **Voice search.** Say *"First Corinthians thirteen four to eight"* and you are there. |
-| Needing a quick explanation of what you just read | ✨ **AI chapter summaries**, short or detailed, ready instantly. |
-| Prayer that feels disconnected from the reading | 🙏 **Prayer generated from your passage**, based on what you actually read. |
-| No record of what you have been reading | 📅 **Reading log** that tracks your activity and feeds your prayers. |
-| Spotty data connection | 📴 **Offline-first.** The Bible and summaries live on your phone. |
+| The problem                                       | The Matins answer                                                                        |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Hunting for a passage while half asleep           | 🎙️ **Voice search.** Say _"First Corinthians thirteen four to eight"_ and you are there. |
+| Needing a quick explanation of what you just read | ✨ **AI chapter summaries**, short or detailed, ready instantly.                         |
+| Prayer that feels disconnected from the reading   | 🙏 **Prayer generated from your passage**, based on what you actually read.              |
+| No record of what you have been reading           | 📅 **Reading log** that tracks your activity and feeds your prayers.                     |
+| Spotty data connection                            | 📴 **Offline-first.** The Bible and summaries live on your phone.                        |
 
 ---
 
 ## ✨ Features
 
-### 🎙️ Voice search *(the headline feature)*
+### 🎙️ Voice search _(the headline feature)_
+
 Speak a reference naturally and Matins opens it. A **rule-based parser** handles most requests instantly, with no internet and no API cost. AI is only a fallback for messy input.
 
-| You say | Matins opens |
-|---|---|
-| "John chapter three verse sixteen" | John 3:16 |
-| "First Corinthians thirteen four to eight" | 1 Corinthians 13:4–8 |
-| "Psalm twenty three" | Psalms 23 |
-| "Song of Songs two" | Song of Solomon 2 |
-| "The one about the prodigal son" | Luke 15 *(AI fallback)* |
+| You say                                    | Matins opens            |
+| ------------------------------------------ | ----------------------- |
+| "John chapter three verse sixteen"         | John 3:16               |
+| "First Corinthians thirteen four to eight" | 1 Corinthians 13:4–8    |
+| "Psalm twenty three"                       | Psalms 23               |
+| "Song of Songs two"                        | Song of Solomon 2       |
+| "The one about the prodigal son"           | Luke 15 _(AI fallback)_ |
 
 ### ✨ AI summaries
+
 All **1,189 chapters** are summarised once, ahead of time, and bundled into the app. That means summaries load instantly, work offline and cost nothing per user.
 
 ### 🙏 Morning prayer generator
+
 Your reading and its summary become a short, personal prayer. When you are offline, a template-based fallback still gives you something meaningful.
 
 ### 📅 Reading activity
+
 Every reading is logged with its passage, time and an optional note. That history shapes the prayers Matins writes for you.
 
 ### 🎨 Designed for early mornings
+
 A warm paper-and-green palette, large readable verses set in **Source Serif 4**, and a big mic button where your thumb already is. A dark mode for dim rooms is planned.
 
 ---
@@ -79,6 +78,7 @@ flowchart LR
 ```
 
 **Design principles**
+
 - **Offline first.** Reading, navigation, voice parsing and summaries need no internet.
 - **Cheap AI.** Pre-generate what repeats (summaries). Call the API only for what is personal (prayers).
 - **Fast when you are sleepy.** Common actions take one tap or one sentence.
@@ -87,15 +87,15 @@ flowchart LR
 
 ## 🛠️ Tech stack
 
-| Layer | Choice |
-|---|---|
-| App | React Native + TypeScript |
-| Local database | SQLite (on-device) |
-| Speech-to-text | On-device recogniser, online fallback |
-| AI | Google Gemini (summaries pre-generated, prayers on demand) |
-| Bible text | King James Version (public domain) |
-| Typography | Source Serif 4 and Inter |
-| Animation | Reanimated + Skia (animated logo) |
+| Layer          | Choice                                                     |
+| -------------- | ---------------------------------------------------------- |
+| App            | React Native + TypeScript                                  |
+| Local database | SQLite (on-device)                                         |
+| Speech-to-text | On-device recogniser, online fallback                      |
+| AI             | Google Gemini (summaries pre-generated, prayers on demand) |
+| Bible text     | King James Version (public domain)                         |
+| Typography     | Source Serif 4 and Inter                                   |
+| Animation      | Reanimated + Skia (animated logo)                          |
 
 ---
 
@@ -143,7 +143,7 @@ GEMINI_API_KEY=your_key_here
 
 ---
 
-## 📁 Project structure *(planned)*
+## 📁 Project structure _(planned)_
 
 ```
 matins/
@@ -198,6 +198,6 @@ matins/
 
 **Built early in the morning, for early mornings.** 🌅
 
-*"Thy word is a lamp unto my feet, and a light unto my path." — Psalm 119:105*
+_"Thy word is a lamp unto my feet, and a light unto my path." — Psalm 119:105_
 
 </div>
