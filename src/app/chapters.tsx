@@ -1,27 +1,65 @@
-import { BOOKS } from "@/constants/books";
+import { getBook } from "@/db/queries";
+import type { Book } from "@/db/queries";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
-    FlatList,
-    Pressable,
-    StyleSheet,
-    Text,
-    useWindowDimensions,
-    View,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
 } from "react-native";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const COLUMNS = 5;
 const GAP = 12;
 const SIDE_PADDING = 18;
 
+type BookLoadResult = {
+  id: number;
+  book: Book | null;
+  error: boolean;
+};
+
 export default function Chapters() {
+  const db = useSQLiteContext();
   const router = useRouter();
   const { width } = useWindowDimensions();
 
   // route params always arrive as strings
-  const { bookId } = useLocalSearchParams<{ bookId: string }>();
-  const book = BOOKS.find((b) => b.id === Number(bookId));
+  const { bookId } = useLocalSearchParams<{ bookId?: string }>();
+  const numericBookId = Number(bookId);
+  const validBookId = Number.isInteger(numericBookId) && numericBookId > 0;
+  const [bookResult, setBookResult] = useState<BookLoadResult | null>(null);
+
+  useEffect(() => {
+    if (!validBookId) return;
+
+    let active = true;
+    getBook(db, numericBookId)
+      .then((book) => {
+        if (active) {
+          setBookResult({ id: numericBookId, book, error: false });
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load book:", error);
+        if (active) setBookResult({ id: numericBookId, book: null, error: true });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [db, numericBookId, validBookId]);
+
+  const currentBookResult =
+    bookResult?.id === numericBookId ? bookResult : null;
+  const book = currentBookResult?.book ?? null;
+  const loading = validBookId && currentBookResult === null;
+  const loadError = currentBookResult?.error ?? false;
 
   // size each square from the screen width so the last row never stretches
   const cellSize = Math.floor(
@@ -37,11 +75,17 @@ export default function Chapters() {
     </View>
   );
 
-  if (!book) {
+  if (loading || loadError || !book) {
     return (
       <SafeAreaView style={styles.container}>
         {header}
-        <Text style={styles.empty}>Couldn't find that book.</Text>
+        <Text style={styles.empty}>
+          {loading
+            ? "Loading chapters…"
+            : loadError
+              ? "Could not load this book."
+              : "Couldn't find that book."}
+        </Text>
       </SafeAreaView>
     );
   }
@@ -71,9 +115,10 @@ export default function Chapters() {
               pressed && styles.cellPressed,
             ]}
             onPress={() => {
-              console.log("Tapped chapter:", book.name, item);
-              // TODO: open the reader once that screen exists, e.g.
-              // router.push({ pathname: "/reader", params: { bookId: book.id, chapter: item } });
+              router.push({
+                pathname: "/reader",
+                params: { bookId: book.id, chapter: item },
+              });
             }}
           >
             <Text style={styles.num}>{item}</Text>

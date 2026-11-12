@@ -1,9 +1,21 @@
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { SQLiteProvider } from "expo-sqlite";
 import { useEffect } from "react";
 
+import { migrateDbIfNeeded } from "@/db/migrate";
+
 SplashScreen.preventAutoHideAsync();
+
+function AppNavigator() {
+  useEffect(() => {
+    // Runs only after fonts are loaded AND SQLite onInit has finished
+    SplashScreen.hideAsync();
+  }, []);
+
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -14,11 +26,13 @@ export default function RootLayout() {
     SourceSerif: require("@/assets/fonts/SourceSerif4.ttf"),
   });
 
-  useEffect(() => {
-    if (loaded || error) SplashScreen.hideAsync();
-  }, [loaded, error]);
+  if (!loaded && !error) {
+    return null;
+  }
 
-  if (!loaded && !error) return null;
-
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <SQLiteProvider databaseName="matins.db" onInit={migrateDbIfNeeded}>
+      <AppNavigator />
+    </SQLiteProvider>
+  );
 }

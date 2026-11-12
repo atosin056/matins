@@ -1,11 +1,14 @@
-import { BOOKS } from "@/constants/books";
+import { getBook, getBooks, getVerses } from "@/db/queries";
+import type { Book } from "@/db/queries";
+import { parseBibleReference } from "@/utils/bibleReference";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from "expo-speech-recognition";
-import { useRef, useState } from "react";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -22,7 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ROW_HEIGHT = 50;
 const DEFAULT_HINT = 'Try saying "Genesis 22"';
 
-type MicStatus = "idle" | "listening" | "done";
+type MicStatus = "idle" | "listening" | "checking";
 
 type BookRowProps = {
   name: string;
@@ -42,18 +45,103 @@ function BookRow({ name, onPress }: BookRowProps) {
 }
 
 export default function Books() {
+  const db = useSQLiteContext();
   const router = useRouter();
+  const [books, setBooks] = useState<Book[]>([]);
+  const [booksReady, setBooksReady] = useState(false);
+  const [bookLoadError, setBookLoadError] = useState(false);
+  const booksRef = useRef<Book[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    getBooks(db)
+      .then((rows) => {
+        if (active) {
+          booksRef.current = rows;
+          setBooks(rows);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load books:", error);
+        if (active) setBookLoadError(true);
+      })
+      .finally(() => {
+        if (active) setBooksReady(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [db]);
 
   const [visible, setVisible] = useState(false);
   const [status, setStatus] = useState<MicStatus>("idle");
-  const [transcript, setTranscript] = useState("");
   const [message, setMessage] = useState<string | null>(null);
-
-  // the "variable" holding whatever was heard (updates live, even mid-sentence)
-  const heardRef = useRef("");
+  const processingVoiceRef = useRef(false);
+  const voiceAttemptRef = useRef(0);
 
   // 0 (silent) -> 1 (loud). Drives the outer ring.
   const level = useRef(new Animated.Value(0)).current;
+
+  const openRecognizedReference = async (
+    spokenReference: string,
+    attempt: number,
+  ) => {
+    const reference = parseBibleReference(spokenReference, booksRef.current);
+    if (!reference) {
+      setMessage('Try saying a book and chapter, like "Genesis 22".');
+      setVisible(false);
+      setStatus("idle");
+      processingVoiceRef.current = false;
+      Alert.alert(
+        "Reference not recognized",
+        'Try saying a book and chapter, like "Genesis 22".',
+      );
+      return;
+    }
+
+    setStatus("checking");
+    try {
+      const book = await getBook(db, reference.bookId);
+      if (attempt !== voiceAttemptRef.current) return;
+      if (!book) {
+        Alert.alert("Book not found", "That book isn't in the database.");
+        return;
+      }
+      if (reference.chapter > book.chapter_count) {
+        Alert.alert(
+          "Chapter not found",
+          `${book.name} has ${book.chapter_count} chapters.`,
+        );
+        return;
+      }
+
+      const verses = await getVerses(db, book.id, reference.chapter);
+      if (attempt !== voiceAttemptRef.current) return;
+      if (verses.length === 0) {
+        Alert.alert("Chapter not found", "No verses are available for it.");
+        return;
+      }
+
+      router.push({
+        pathname: "/reader",
+        params: { bookId: book.id, chapter: reference.chapter },
+      });
+    } catch (error: unknown) {
+      if (attempt !== voiceAttemptRef.current) return;
+      console.error("Failed to verify spoken Bible reference:", error);
+      Alert.alert(
+        "Couldn't open chapter",
+        "The reference could not be checked. Please try again.",
+      );
+    } finally {
+      if (attempt === voiceAttemptRef.current) {
+        setVisible(false);
+        setStatus("idle");
+        processingVoiceRef.current = false;
+      }
+    }
+  };
 
   // ---------- speech events ----------
   useSpeechRecognitionEvent("speechstart", () => {
@@ -62,12 +150,13 @@ export default function Books() {
 
   useSpeechRecognitionEvent("result", (ev) => {
     const text = ev.results[0]?.transcript ?? "";
-    heardRef.current = text;
     if (ev.isFinal) {
       console.log("Heard:", text);
-      setTranscript(text);
-      setStatus("done");
-      setVisible(false);
+      if (!processingVoiceRef.current) {
+        processingVoiceRef.current = true;
+        const attempt = ++voiceAttemptRef.current;
+        void openRecognizedReference(text, attempt);
+      }
     }
   });
 
@@ -104,6 +193,8 @@ export default function Books() {
 
   // ---------- actions ----------
   const startListening = async () => {
+    voiceAttemptRef.current += 1;
+    processingVoiceRef.current = false;
     const { granted } =
       await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     if (!granted) {
@@ -113,8 +204,6 @@ export default function Books() {
       );
       return false;
     }
-    heardRef.current = "";
-    setTranscript("");
     setMessage(null);
     setStatus("idle");
     ExpoSpeechRecognitionModule.start({
@@ -127,6 +216,14 @@ export default function Books() {
   };
 
   const openMic = async () => {
+    if (!booksReady) {
+      Alert.alert("Books are loading", "Please try voice search again shortly.");
+      return;
+    }
+    if (bookLoadError || books.length === 0) {
+      Alert.alert("Books unavailable", "The book list could not be loaded.");
+      return;
+    }
     console.log("Mic is ON");
     const ok = await startListening();
     if (ok) setVisible(true);
@@ -134,6 +231,8 @@ export default function Books() {
 
   const closeMic = () => {
     console.log("Mic is OFF");
+    voiceAttemptRef.current += 1;
+    processingVoiceRef.current = false;
     ExpoSpeechRecognitionModule.abort();
     level.setValue(0);
     setVisible(false);
@@ -143,8 +242,8 @@ export default function Books() {
   const cardText =
     status === "listening"
       ? "Listening…"
-      : status === "done"
-        ? transcript
+      : status === "checking"
+        ? "Checking reference…"
         : (message ?? DEFAULT_HINT);
 
   return (
@@ -176,7 +275,9 @@ export default function Books() {
               <Pressable
                 style={styles.micCircle}
                 onPress={() => {
-                  if (status !== "listening") startListening();
+                  if (status !== "listening" && status !== "checking") {
+                    startListening();
+                  }
                 }}
               >
                 <Ionicons name="mic" size={40} color="#000" />
@@ -202,7 +303,7 @@ export default function Books() {
 
         <FlatList
           style={{ marginTop: 20 }}
-          data={BOOKS}
+          data={books}
           keyExtractor={(b) => String(b.id)}
           getItemLayout={(_, i) => ({
             length: ROW_HEIGHT,
@@ -221,6 +322,15 @@ export default function Books() {
               }}
             />
           )}
+          ListEmptyComponent={
+            <Text style={styles.empty}>
+              {booksReady
+                ? bookLoadError
+                  ? "Could not load books."
+                  : "No books available."
+                : "Loading books..."}
+            </Text>
+          }
         />
       </SafeAreaView>
     </>
@@ -249,6 +359,13 @@ const styles = StyleSheet.create({
   },
   rowPressed: { backgroundColor: "#242524" },
   name: { color: "white", fontFamily: "Poppins-Medium", fontSize: 17 },
+  empty: {
+    color: "#8A8F98",
+    fontFamily: "Poppins-Medium",
+    fontSize: 16,
+    marginTop: 24,
+    textAlign: "center",
+  },
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
